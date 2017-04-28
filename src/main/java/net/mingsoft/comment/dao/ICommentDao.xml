@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!-- 评论持久化层XML配置继承ICommentDao -->
+<mapper namespace="net.mingsoft.comment.dao.ICommentDao">
+
+	<!-- 评论表字段 -->
+	<sql id="column_list">
+		COMMENT_ID,COMMENT_COMMENTID,COMMENT_CONTENT,COMMENT_PICTURE,COMMENT_FILE_NAME,COMMENT_FILE_PATH,COMMENT_TIME,COMMENT_TYPE,COMMENT_PEOPLEID,COMMENT_POINTS,COMMENT_BASICID
+	</sql>
+
+	<!-- 评论表、Basic表、会员表字段 -->
+	<sql id="all_column_list">
+		c.COMMENT_ID,c.COMMENT_COMMENTID,c.COMMENT_CONTENT,c.COMMENT_PICTURE,c.COMMENT_FILE_NAME,c.COMMENT_FILE_PATH,c.COMMENT_TIME,c.COMMENT_TYPE,c.COMMENT_PEOPLEID,c.COMMENT_POINTS,c.COMMENT_BASICID,
+		b.BASIC_TITLE,p.PEOPLE_NAME
+	</sql>
+
+	<!-- 评论表字段与评论实体属性对应，供返回实体信息时使用 -->
+	<resultMap id="resultMap" type="java.util.HashMap">
+		<id column="COMMENT_ID" property="commentId" />
+		<result column="COMMENT_COMMENTID" property="commentCommentId" />
+		<result column="COMMENT_CONTENT" property="commentContent" />
+		<result column="COMMENT_PICTURE" property="commentPicture" />
+		<result column="COMMENT_FILE_NAME" property="commentFileName" />
+		<result column="COMMENT_FILE_PATH" property="commentFilePath" />
+		<result column="COMMENT_TIME" property="commentTime" />
+		<result column="COMMENT_TYPE" property="commentType" />
+		<result column="COMMENT_PEOPLEID" property="commentPeopleId" />
+		<result column="COMMENT_POINTS" property="commentPoints" />
+		<result column="COMMENT_BASICID" property="commentBasicId" />
+		<result column="BASIC_TITLE" property="basicTitle" />
+		<result column="PEOPLE_NAME" property="peopleName" />
+	</resultMap>
+	<resultMap id="resultMapComment" type="net.mingsoft.comment.entity.CommentEntity">
+		<id column="COMMENT_ID" property="commentId" />
+		<result column="COMMENT_COMMENTID" property="commentCommentId" />
+		<result column="COMMENT_CONTENT" property="commentContent" />
+		<result column="COMMENT_PICTURE" property="commentPicture" />
+		<result column="COMMENT_FILE_NAME" property="commentFileName" />
+		<result column="COMMENT_FILE_PATH" property="commentFilePath" />
+		<result column="COMMENT_TIME" property="commentTime" />
+		<result column="COMMENT_TYPE" property="commentType" />
+		<result column="COMMENT_PEOPLEID" property="commentPeopleId" />
+		<result column="COMMENT_POINTS" property="commentPoints" />
+		<result column="COMMENT_BASICID" property="commentBasicId" />
+		<result column="COMMENT_APPID" property="commentAppId" /><!-- 评论商品id -->
+		<association property="commentPeople"
+			javaType="com.mingsoft.people.entity.PeopleEntity">
+			<id column="PEOPLE_ID" property="peopleId" /><!-- 将实体的ID属性与表的ID字段对接 -->
+			<result column="PEOPLE_PHONE" property="peoplePhone" /><!-- 将实体的peoplePhone属性与表的peoplePhone字段对接 -->
+			<result column="PEOPLE_NAME" property="peopleName" /><!-- 将实体的peopleName属性与表的peopleName字段对接 -->
+			<result column="PEOPLE_DATETIME" property="peopleDateTime" /><!-- 
+				将实体的peopleDateTime属性与表的peopleDateTime字段对接 -->
+			<result column="PEOPLE_MAIL" property="peopleMail" /><!-- 用户邮箱 -->
+			<association property="peopleUser" javaType="com.mingsoft.people.entity.PeopleUserEntity">
+				<result column="PU_ICON" property="peopleUserIcon"/>
+				<result column="PU_NICKNAME" property="peopleUserNickName"/>
+			</association>
+		</association>
+
+	</resultMap>
+
+	<!-- 评论列表分页查询开始 -->
+	<select id="query" resultMap="resultMapComment"
+		parameterType="net.mingsoft.comment.entity.CommentEntity">
+		select
+		<include refid="all_column_list" />,PU_ICON,PU_NICKNAME
+		from comment c left join basic b on b.BASIC_ID = c.COMMENT_BASICID
+		left join people p on p.PEOPLE_ID = c.COMMENT_PEOPLEID left join people_user on pu_people_id=p.PEOPLE_ID
+		<where>
+			<if test="commentBasicId &gt; 0">
+				COMMENT_BASICID=#{commentBasicId}
+			</if>
+		</where>
+		 order by comment_id desc
+	</select>
+	<!-- 评论列表分页查询结束 -->
+
+	<!-- 增加评论开始 -->
+	<insert id="saveEntity" useGeneratedKeys="true" keyProperty="commentId"
+		parameterType="net.mingsoft.comment.entity.CommentEntity">
+		insert into comment
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="commentCommentId != null">COMMENT_COMMENTID,</if>
+			<if test="commentContent != null">COMMENT_CONTENT,</if>
+			<if test="commentPicture != null">COMMENT_PICTURE,</if>
+			<if test="commentFileName != null">COMMENT_FILE_NAME,</if>
+			<if test="commentFilePath != null">COMMENT_FILE_PATH,</if>
+			<if test="commentTime != null">COMMENT_TIME,</if>
+			<if test="commentType != null">COMMENT_TYPE,</if>
+			<if test="commentPeopleId != null">COMMENT_PEOPLEID,</if>
+			<if test="commentPoints != null">COMMENT_POINTS,</if>
+			<if test="commentBasicId != null">COMMENT_BASICID,</if>
+			<if test="commentAppId != null">COMMENT_APPID</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="commentCommentId != null">#{commentCommentId},</if>
+			<if test="commentContent != null">#{commentContent},</if>
+			<if test="commentPicture != null">#{commentPicture},</if>
+			<if test="commentFileName != null">#{commentFileName},</if>
+			<if test="commentFilePath != null">#{commentFilePath},</if>
+			<if test="commentTime != null">#{commentTime},</if>
+			<if test="commentType != null">#{commentType},</if>
+			<if test="commentPeopleId != null">#{commentPeopleId},</if>
+			<if test="commentPoints != null">#{commentPoints},</if>
+			<if test="commentBasicId != null">#{commentBasicId},</if>
+			<if test="commentAppId != null">#{commentAppId}</if>
+		</trim>
+	</insert>
+	<!-- 增加评论结束 -->
+
+	<!-- 删除评论开始 -->
+	<delete id="deleteEntity" parameterType="int">
+		delete from comment
+		where COMMENT_ID = #{commentId}
+	</delete>
+	<!-- 删除评论结束 -->
+
+	<!-- 更新评论开始 -->
+	<update id="updateEntity" parameterType="net.mingsoft.comment.entity.CommentEntity">
+		update comment
+		<set>
+			<if test="commentCommentId != null">COMMENT_COMMENTID=#{commentCommentId},</if>
+			<if test="commentContent != null">COMMENT_CONTENT=#{commentContent},</if>
+			<if test="commentPicture != null">COMMENT_PICTURE=#{commentPicture},</if>
+			<if test="commentTime != null">COMMENT_TIME=#{commentTime},</if>
+			<if test="commentType != null">COMMENT_TYPE=#{commentType},</if>
+			<if test="commentPeopleId != null">COMMENT_PEOPLEID=#{commentPeopleId},</if>
+			<if test="commentPoints != null">COMMENT_POINTS=#{commentPoints},</if>
+			<if test="commentBasicId != null">COMMENT_BASICID=#{commentBasicId}</if>
+		</set>
+		where COMMENT_ID = #{commentId}
+	</update>
+	<!-- 更新评论结束 -->
+
+	<!-- 查询评论开始 -->
+	<select id="getEntity" parameterType="int" resultMap="resultMapComment">
+		select 
+		<include refid="column_list" />
+		from comment where COMMENT_ID = #{commentId};
+	</select>
+	<!-- 查询评论结束 -->
+
+	<select id="sumery" parameterType="net.mingsoft.comment.entity.CommentEntity" resultType="net.mingsoft.comment.bean.CommentSumeryBean">
+		select sum(COMMENT_POINTS) as commentPointsCount,count(comment_id) as commentCount from `comment`  WHERE COMMENT_BASICID=#{commentBasicId}
+	</select>
+</mapper>
